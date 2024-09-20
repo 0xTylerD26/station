@@ -211,8 +211,8 @@ export const useNav = () => {
 
 /* helpers */
 export const useGoBackOnError = ({ error }: QueryState) => {
-  const navigate = useNavigate()
-  useEffect(() => {
-    if (error) navigate("..", { replace: true })
-  }, [error, navigate])
+	const navigate = useNavigate();
+	useEffect(() => {
+		if (error) navigate("..", { replace: true });
+	}, [error, navigate]);
 }

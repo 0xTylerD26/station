@@ -12,9 +12,9 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { isDenom, isDenomIBC, readDenom } from "@terra.kitchen/utils";
-import { Coin, Coins, CreateTxOptions } from "@terra-money/terra.js";
-import { LCDClient, Fee } from "@terra-money/terra.js";
-import { isTxError } from "@terra-money/terra.js";
+import { Coin, Coins, CreateTxOptions } from "@terra-money/feather.js";
+import { LCDClient, Fee } from "@terra-money/feather.js";
+import { isTxError } from "@terra-money/feather.js";
 import { ConnectType, UserDenied } from "@terra-money/wallet-types";
 import { CreateTxFailed, TxFailed } from "@terra-money/wallet-types";
 import { useWallet, useConnectedWallet } from "@terra-money/use-wallet";
@@ -126,7 +126,11 @@ function Tx<TxValues>(props: Props<TxValues>) {
 	const { data } = useTxInfo(latestTx);
 	const [, , , saveSession] = useSessionsState();
 
-	const status = !data ? Status.LOADING : isTxError(data) ? Status.FAILURE : Status.SUCCESS;
+	const status = !data
+		? Status.LOADING
+		: isTxError(data as any)
+			? Status.FAILURE
+			: Status.SUCCESS;
 
 	/* taxes */
 	const taxParams = useTaxParams();
@@ -135,7 +139,7 @@ function Tx<TxValues>(props: Props<TxValues>) {
 				coins ?? ([{ input: 0, denom: initialGasDenom }] as CoinInput[]),
 				taxParams,
 				isClassic
-		  )
+			)
 		: undefined;
 	const shouldTax = getShouldTax(token, isClassic) && taxRequired;
 	const { data: rate = "0", ...taxRateState } = useTaxRate(!shouldTax);
@@ -154,9 +158,15 @@ function Tx<TxValues>(props: Props<TxValues>) {
 		msgs: simulationTx?.msgs.map((msg) => msg.toData(isClassic)),
 	};
 
-	const { data: estimatedGas, ...estimatedGasState } = useQuery(
-		[queryKey.tx.create, key],
-		async () => {
+	const { data: estimatedGas, ...estimatedGasState } = useQuery({
+		queryKey: [queryKey.tx.create, key],
+		...RefetchOptions.INFINITY,
+		// To handle sequence mismatch
+		retry: 3,
+		retryDelay: 1000,
+		// Because the focus occurs once when posting back from the extension
+		refetchOnWindowFocus: false,
+		queryFn: async () => {
 			if (!address || isWalletEmpty) return 0;
 			if (!(wallet || connectedWallet?.availablePost)) return 0;
 			if (!simulationTx || !simulationTx.msgs.length) return 0;
@@ -177,16 +187,7 @@ function Tx<TxValues>(props: Props<TxValues>) {
 
 			return unsignedTx.auth_info.fee.gas_limit;
 		},
-		{
-			...RefetchOptions.INFINITY,
-			// To handle sequence mismatch
-			retry: 3,
-			retryDelay: 1000,
-			// Because the focus occurs once when posting back from the extension
-			refetchOnWindowFocus: false,
-			enabled: !isBroadcasting,
-		}
-	);
+	});
 
 	const getGasAmount = useCallback(
 		(denom: CoinDenom) => {
@@ -207,7 +208,7 @@ function Tx<TxValues>(props: Props<TxValues>) {
 	const getNativeMax = () => {
 		if (!balance) return;
 		const gasAmount = gasFee.denom === token ? gasFee.amount : "0";
-		return calcMax({ balance, rate, cap, gasAmount, taxRequired }).max;
+		return calcMax({ balance, rate: rate as any, cap, gasAmount, taxRequired }).max;
 	};
 
 	const max = !gasFee.amount ? undefined : isDenom(token) ? getNativeMax() : balance;
@@ -219,7 +220,9 @@ function Tx<TxValues>(props: Props<TxValues>) {
 
 	/* tax */
 	const taxAmount =
-		token && amount && shouldTax ? calcMinimumTaxAmount(amount, { rate, cap }) : undefined;
+		token && amount && shouldTax
+			? calcMinimumTaxAmount(amount, { rate: rate as any, cap })
+			: undefined;
 
 	/* (effect): Log error on console */
 	const failed = getErrorMessage(taxState.error ?? estimatedGasState.error);
@@ -242,16 +245,16 @@ function Tx<TxValues>(props: Props<TxValues>) {
 		passwordRequired && !password
 			? t("Enter password")
 			: taxState.isLoading
-			? t("Loading tax data...")
-			: taxState.error
-			? t("Failed to load tax data")
-			: estimatedGasState.isLoading
-			? t("Estimating fee...")
-			: estimatedGasState.error
-			? t("Fee estimation failed")
-			: isBroadcasting
-			? t("Broadcasting a tx...")
-			: props.disabled || "";
+				? t("Loading tax data...")
+				: taxState.error
+					? t("Failed to load tax data")
+					: estimatedGasState.isLoading
+						? t("Estimating fee...")
+						: estimatedGasState.error
+							? t("Fee estimation failed")
+							: isBroadcasting
+								? t("Broadcasting a tx...")
+								: props.disabled || "";
 
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<Error>();
@@ -297,7 +300,7 @@ function Tx<TxValues>(props: Props<TxValues>) {
 					setLatestTx({ txhash: result.txhash, queryKeys, redirectAfterTx });
 				}
 			} else {
-				const { result } = await post({ ...tx, fee, isClassic });
+				const { result } = await post({ ...tx, fee: fee as any, isClassic });
 				setLatestTx({ txhash: result.txhash, queryKeys, redirectAfterTx });
 			}
 
@@ -590,10 +593,10 @@ function Tx<TxValues>(props: Props<TxValues>) {
 		connectedWallet?.connectType === ConnectType.READONLY
 			? t("Wallet is connected as read-only mode")
 			: !availableGasDenoms.length
-			? t("Insufficient balance to pay transaction fee")
-			: isWalletEmpty
-			? t("Coins required to post transactions")
-			: "";
+				? t("Insufficient balance to pay transaction fee")
+				: isWalletEmpty
+					? t("Coins required to post transactions")
+					: "";
 
 	const submitButton = (
 		<>
@@ -729,25 +732,25 @@ function Tx<TxValues>(props: Props<TxValues>) {
 						Byte data signing is completed.
 					</Pre>
 				),
-		  }
+			}
 		: !error
-		? undefined
-		: {
-				title:
-					error instanceof UserDenied
-						? t("User denied")
-						: error instanceof CreateTxFailed
-						? t("Failed to create tx")
-						: error instanceof TxFailed
-						? t("Tx failed")
-						: t("Error"),
-				children:
-					error instanceof UserDenied ? null : (
-						<Pre height={120} normal break>
-							{error.message}
-						</Pre>
-					),
-		  };
+			? undefined
+			: {
+					title:
+						error instanceof UserDenied
+							? t("User denied")
+							: error instanceof CreateTxFailed
+								? t("Failed to create tx")
+								: error instanceof TxFailed
+									? t("Tx failed")
+									: t("Error"),
+					children:
+						error instanceof UserDenied ? null : (
+							<Pre height={120} normal break>
+								{error.message}
+							</Pre>
+						),
+				};
 
 	return (
 		<>
@@ -775,7 +778,7 @@ function Tx<TxValues>(props: Props<TxValues>) {
 							? () => {
 									setDoneSignBytes(false);
 									onPost?.();
-							  }
+								}
 							: () => setError(undefined)
 					}
 					isOpen

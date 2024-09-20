@@ -19,13 +19,13 @@ const AnchorEarnTx = () => {
 
   const getDisabled = (tab: AnchorEarnAction) => {
     if (!deposit) return true
-    const availableActions = getAvailableAnchorEarnActions(deposit, bankBalance)
+    const availableActions = getAvailableAnchorEarnActions(deposit as Amount, bankBalance);
     return !availableActions[tab]
   }
 
   const renderTab = (tab: AnchorEarnAction) => {
     if (!(deposit && rate)) return null
-    return <AnchorEarnForm tab={tab} deposit={deposit} rate={rate} />
+    return <AnchorEarnForm tab={tab} deposit={deposit as Amount} rate={rate as Amount} />;
   }
 
   return (

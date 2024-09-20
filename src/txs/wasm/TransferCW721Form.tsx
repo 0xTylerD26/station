@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useForm } from "react-hook-form"
 import PersonIcon from "@mui/icons-material/Person"
-import { AccAddress } from "@terra-money/terra.js"
-import { MsgExecuteContract } from "@terra-money/terra.js"
+import { AccAddress } from "@terra-money/feather.js";
+import { MsgExecuteContract } from "@terra-money/feather.js";
 import { truncate } from "@terra.kitchen/utils"
 import { SAMPLE_ADDRESS } from "config/constants"
 import { queryKey } from "data/query"
@@ -52,134 +52,130 @@ const TransferCW721Form = ({ contract, id }: Props) => {
   /* resolve recipient */
   const { data: resolvedAddress, ...tnsState } = useTnsAddress(recipient ?? "")
   useEffect(() => {
-    if (!recipient) {
-      setValue("address", undefined)
-    } else if (AccAddress.validate(recipient)) {
-      setValue("address", recipient)
-    } else if (resolvedAddress) {
-      setValue("address", resolvedAddress)
-    } else {
-      setValue("address", recipient)
-    }
-  }, [form, recipient, resolvedAddress, setValue])
+		if (!recipient) {
+			setValue("address", undefined);
+		} else if (AccAddress.validate(recipient)) {
+			setValue("address", recipient);
+		} else if (resolvedAddress) {
+			setValue("address", resolvedAddress as string);
+		} else {
+			setValue("address", recipient);
+		}
+  }, [form, recipient, resolvedAddress, setValue]);
 
   // validate(tns): not found
   const invalid =
-    recipient?.endsWith(".ust") && !tnsState.isLoading && !resolvedAddress
-      ? t("Address not found")
-      : ""
+		recipient?.endsWith(".ust") && !tnsState.isLoading && !resolvedAddress
+			? t("Address not found")
+			: "";
 
-  const disabled =
-    invalid || (tnsState.isLoading && t("Searching for address..."))
+  const disabled = invalid || (tnsState.isLoading && t("Searching for address..."));
 
   useEffect(() => {
-    if (invalid) setError("recipient", { type: "invalid", message: invalid })
-  }, [invalid, setError])
+		if (invalid) setError("recipient", { type: "invalid", message: invalid });
+  }, [invalid, setError]);
 
   /* tx */
   const createTx = useCallback(
-    ({ address, memo }: TxValues) => {
-      if (!connectedAddress) return
-      if (!(address && AccAddress.validate(address))) return
+		({ address, memo }: TxValues) => {
+			if (!connectedAddress) return;
+			if (!(address && AccAddress.validate(address))) return;
 
-      const msgs = [
-        new MsgExecuteContract(connectedAddress, contract, {
-          transfer_nft: { recipient: address, token_id: id },
-        }),
-      ]
+			const msgs = [
+				new MsgExecuteContract(connectedAddress, contract, {
+					transfer_nft: { recipient: address, token_id: id },
+				}),
+			];
 
-      return { msgs, memo }
-    },
-    [connectedAddress, contract, id]
-  )
+			return { msgs, memo };
+		},
+		[connectedAddress, contract, id]
+  );
 
   /* fee */
-  const estimationTxValues = useMemo(
-    () => ({ address: connectedAddress }),
-    [connectedAddress]
-  )
+  const estimationTxValues = useMemo(() => ({ address: connectedAddress }), [connectedAddress]);
 
   const tx = {
-    initialGasDenom,
-    estimationTxValues,
-    createTx,
-    disabled,
-    onSuccess: { label: t("NFT"), path: "/nft" },
-    queryKeys: [
-      [
-        queryKey.wasm.contractQuery,
-        contract,
-        { tokens: { owner: connectedAddress } },
-      ],
-    ],
-  }
+		initialGasDenom,
+		estimationTxValues,
+		createTx,
+		disabled,
+		onSuccess: { label: t("NFT"), path: "/nft" },
+		queryKeys: [
+			[queryKey.wasm.contractQuery, contract, { tokens: { owner: connectedAddress } }],
+		],
+  };
 
   const renderResolvedAddress = () => {
-    if (!resolvedAddress) return null
-    return (
-      <InlineFlex gap={4} className="success">
-        <PersonIcon fontSize="inherit" />
-        {truncate(resolvedAddress)}
-      </InlineFlex>
-    )
-  }
+		if (!resolvedAddress) return null;
+		return (
+			<InlineFlex gap={4} className="success">
+				<PersonIcon fontSize="inherit" />
+				{truncate(resolvedAddress as string)}
+			</InlineFlex>
+		);
+  };
 
   return (
-    <Auto
-      columns={[
-        <Card isFetching={tnsState.isLoading}>
-          <NFTAssetItem contract={contract} id={id} />
+		<Auto
+			columns={[
+				<Card isFetching={tnsState.isLoading}>
+					<NFTAssetItem contract={contract} id={id} />
 
-          <Tx {...tx}>
-            {({ fee, submit }) => (
-              <Form onSubmit={handleSubmit(submit.fn)}>
-                <FormItem
-                  label={t("Recipient")}
-                  extra={renderResolvedAddress()}
-                  error={errors.recipient?.message}
-                >
-                  <Input
-                    {...register("recipient", {
-                      validate: validate.recipient(),
-                    })}
-                    placeholder={SAMPLE_ADDRESS}
-                    autoFocus
-                  />
+					<Tx {...tx}>
+						{({ fee, submit }) => (
+							<Form
+								onSubmit={handleSubmit((values: TxValues) =>
+									submit.fn(values as any)
+								)}
+							>
+								<FormItem
+									label={t("Recipient")}
+									extra={renderResolvedAddress()}
+									error={errors.recipient?.message}
+								>
+									<Input
+										{...register("recipient", {
+											validate: validate.recipient(),
+										})}
+										placeholder={SAMPLE_ADDRESS}
+										autoFocus
+									/>
 
-                  <input {...register("address")} readOnly hidden />
-                </FormItem>
+									<input {...register("address")} readOnly hidden />
+								</FormItem>
 
-                <FormItem
-                  label={`${t("Memo")} (${t("optional")})`}
-                  error={errors.memo?.message}
-                >
-                  <Input
-                    {...register("memo", {
-                      validate: {
-                        size: validate.size(256, "Memo"),
-                        brackets: validate.memo(),
-                      },
-                    })}
-                  />
-                </FormItem>
+								<FormItem
+									label={`${t("Memo")} (${t("optional")})`}
+									error={errors.memo?.message}
+								>
+									<Input
+										{...register("memo", {
+											validate: {
+												size: validate.size(256, "Memo"),
+												brackets: validate.memo(),
+											},
+										})}
+									/>
+								</FormItem>
 
-                {fee.render()}
+								{fee.render()}
 
-                {!memo && (
-                  <FormHelp>
-                    {t("Check if this transaction requires a memo")}
-                  </FormHelp>
-                )}
+								{!memo && (
+									<FormHelp>
+										{t("Check if this transaction requires a memo")}
+									</FormHelp>
+								)}
 
-                {submit.button}
-              </Form>
-            )}
-          </Tx>
-        </Card>,
-        <AddressBookList onClick={onClickAddressBookItem} />,
-      ]}
-    />
-  )
+								{submit.button}
+							</Form>
+						)}
+					</Tx>
+				</Card>,
+				<AddressBookList onClick={onClickAddressBookItem} />,
+			]}
+		/>
+  );
 }
 
 export default TransferCW721Form

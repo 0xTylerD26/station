@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useIsClassic } from "data/query"
-import { isVestingAccount, useAccount } from "data/queries/vesting"
+import { Account, isVestingAccount, useAccount } from "data/queries/vesting";
 import { parseVestingSchedule } from "data/queries/vesting"
 import { readNativeDenom } from "data/token"
 import { Card } from "components/layout"
@@ -19,7 +19,7 @@ const Vesting = () => {
   if (!data) return null
   if (!isVestingAccount(data)) return null
 
-  const schedule = parseVestingSchedule(data)
+  const schedule = parseVestingSchedule(data as Account);
 
   return (
     <Card {...state} title={t("Vesting")}>

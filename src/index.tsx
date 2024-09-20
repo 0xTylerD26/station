@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client"; // Updated import
 import { BrowserRouter } from "react-router-dom";
 import { RecoilRoot } from "recoil";
 import { getChainOptions } from "@terra-money/wallet-controller";
@@ -19,8 +19,10 @@ import App from "app/App";
 
 const connectorOpts = { bridge: BRIDGE };
 
-getChainOptions().then((chainOptions) =>
-	render(
+getChainOptions().then((chainOptions) => {
+	const container = document.getElementById("station");
+	const root = createRoot(container!); // Create root using createRoot API
+	root.render(
 		<StrictMode>
 			<RecoilRoot>
 				<BrowserRouter>
@@ -36,7 +38,6 @@ getChainOptions().then((chainOptions) =>
 					</WalletProvider>
 				</BrowserRouter>
 			</RecoilRoot>
-		</StrictMode>,
-		document.getElementById("station")
-	)
-);
+		</StrictMode>
+	);
+});
