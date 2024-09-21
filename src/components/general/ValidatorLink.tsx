@@ -1,4 +1,4 @@
-import { ValAddress } from "@terra-money/feather.js";
+import { ValAddress } from "@terra-money/terra.js";
 import { getFindMoniker, useValidators } from "data/queries/staking";
 import { FinderLink } from "../general";
 import { InternalLink } from "./Internal";

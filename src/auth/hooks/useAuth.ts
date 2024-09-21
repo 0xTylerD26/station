@@ -1,34 +1,34 @@
 import { useCallback, useMemo } from "react"
 import { atom, useRecoilState } from "recoil"
 import { encode } from "js-base64"
-import { CreateTxOptions, Tx, isTxError } from "@terra-money/feather.js";
-import { AccAddress, SignDoc } from "@terra-money/feather.js";
-import { MnemonicKey, RawKey, SignatureV2 } from "@terra-money/feather.js";
-import { LedgerKey } from "@terra-money/ledger-terra-js"
-import BluetoothTransport from "@ledgerhq/hw-transport-web-ble"
-import { LEDGER_TRANSPORT_TIMEOUT } from "config/constants"
-import { useChainID } from "data/wallet"
-import { useIsClassic } from "data/query"
-import { useLCDClient } from "data/queries/lcdClient"
-import is from "../scripts/is"
+import { CreateTxOptions, Tx, isTxError } from "@terra-money/terra.js";
+import { AccAddress, SignDoc } from "@terra-money/terra.js";
+import { MnemonicKey, RawKey, SignatureV2 } from "@terra-money/terra.js";
+import { LedgerKey } from "@terra-money/ledger-terra-js";
+import BluetoothTransport from "@ledgerhq/hw-transport-web-ble";
+import { LEDGER_TRANSPORT_TIMEOUT } from "config/constants";
+import { useChainID } from "data/wallet";
+import { useIsClassic } from "data/query";
+import { useLCDClient } from "data/queries/lcdClient";
+import is from "../scripts/is";
 import {
-  addWallet,
-  getBioAble,
-  getBioStamps,
-  PasswordError,
-  setBioKeys,
-  setBioStamps,
-} from "../scripts/keystore"
-import { getDecryptedKey, testPassword } from "../scripts/keystore"
-import { getWallet, storeWallet } from "../scripts/keystore"
-import { clearWallet, lockWallet } from "../scripts/keystore"
-import { getStoredWallet, getStoredWallets } from "../scripts/keystore"
-import { getBioState, getBioKeys } from "../scripts/keystore"
-import encrypt from "../scripts/encrypt"
-import useAvailable from "./useAvailable"
-import decrypt from "../scripts/decrypt"
-import { RN_APIS, WebViewMessage } from "../../utils/rnModule"
-import { SyncTxBroadcastResult } from "@terra-money/feather.js/dist/client/lcd/api/TxAPI";
+	addWallet,
+	getBioAble,
+	getBioStamps,
+	PasswordError,
+	setBioKeys,
+	setBioStamps,
+} from "../scripts/keystore";
+import { getDecryptedKey, testPassword } from "../scripts/keystore";
+import { getWallet, storeWallet } from "../scripts/keystore";
+import { clearWallet, lockWallet } from "../scripts/keystore";
+import { getStoredWallet, getStoredWallets } from "../scripts/keystore";
+import { getBioState, getBioKeys } from "../scripts/keystore";
+import encrypt from "../scripts/encrypt";
+import useAvailable from "./useAvailable";
+import decrypt from "../scripts/decrypt";
+import { RN_APIS, WebViewMessage } from "../../utils/rnModule";
+import { SyncTxBroadcastResult } from "@terra-money/terra.js/dist/client/lcd/api/TxAPI";
 import { useSessionsState } from "./useSessions"
 
 const walletState = atom({

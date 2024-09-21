@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import BigNumber from "bignumber.js";
-import { OracleParams, ValAddress } from "@terra-money/feather.js";
+import { OracleParams, ValAddress } from "@terra-money/terra.js";
 import { TerraValidator } from "types/validator";
 import { TerraProposalItem } from "types/proposal";
 import { useChainID, useNetwork } from "data/wallet";
