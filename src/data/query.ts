@@ -3,7 +3,7 @@ import { LAZY_LIMIT } from "config/constants"
 
 export const useIsClassic = () => {
   const chainId = useChainID()
-  return chainId.startsWith("columbus")
+  return chainId?.startsWith("columbus")
 }
 
 /* refetch */
